@@ -41,6 +41,47 @@ fn sexp_size() {
   assert_eq!(mem::size_of::<Sexp>(), mem::size_of::<isize>()*5);
 }
 
+
+/// This is for indicating Sexp conversion error
+#[derive(Debug)]
+pub enum ConversionError {
+    /// Convert convert to vec since this sexp isn't a list
+    List
+}
+
+
+impl fmt::Display for ConversionError {
+  fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    write!(f, "Can't convert")
+  }
+}
+
+impl error::Error for ConversionError {
+  fn description(&self) -> &str { "Can't convert" }
+  fn cause(&self) -> Option<&error::Error> { None }
+}
+
+impl Sexp {
+    /// Converting Sexp to vector
+    fn as_vec(&self) -> Result<&Vec<Sexp>, Box<error::Error>> {
+        match self {
+            &Sexp::List(ref vec) => Ok(vec),
+            _ => Err(Box::new(ConversionError::List))
+        }
+    }
+}
+
+#[test]
+fn test_sexp_list_to_vec() {
+    let v = vec![];
+    assert!(Sexp::List(v).as_vec().unwrap().len() == 0);
+}
+
+#[test]
+fn test_sexp_keyword_to_vec() {
+    assert!(atom_k("KEY").as_vec().is_err());
+}
+
 /// The representation of an s-expression parse error.
 pub struct Error {
   /// The error message.
