@@ -63,7 +63,7 @@ impl error::Error for ConversionError {
 
 impl Sexp {
     /// Converting Sexp to vector
-    fn as_vec(&self) -> Result<&Vec<Sexp>, Box<error::Error>> {
+    pub fn as_vec(&self) -> Result<&Vec<Sexp>, Box<error::Error>> {
         match self {
             &Sexp::List(ref vec) => Ok(vec),
             _ => Err(Box::new(ConversionError::List))
