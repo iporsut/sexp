@@ -45,8 +45,11 @@ fn sexp_size() {
 /// This is for indicating Sexp conversion error
 #[derive(Debug)]
 pub enum ConversionError {
-    /// Convert convert to vec since this sexp isn't a list
-    List
+    /// Cannot convert to vec since this sexp isn't a list
+    List,
+    /// Cannot convert to string since this sexp is neither string, nor symbol,
+    /// nor keyword
+    String
 }
 
 
@@ -69,7 +72,25 @@ impl Sexp {
             _ => Err(Box::new(ConversionError::List))
         }
     }
+
+    /// Extracting Sexp string, symbol and keyword to string
+    pub fn as_str(&self) -> Result<&str, Box<error::Error>> {
+        match self {
+            &Sexp::Atom(ref atom) => {
+                match atom {
+                    &Atom::S(ref s) => Ok(&s),
+                    &Atom::K(ref k) => Ok(&k),
+                    &Atom::Y(ref y) => Ok(&y),
+                    _ => Err(Box::new(ConversionError::String))
+                }
+            }
+            _ => Err(Box::new(ConversionError::String))
+        }
+    }
 }
+
+
+// test to_vec
 
 #[test]
 fn test_sexp_list_to_vec() {
@@ -80,6 +101,39 @@ fn test_sexp_list_to_vec() {
 #[test]
 fn test_sexp_keyword_to_vec() {
     assert!(atom_k("KEY").as_vec().is_err());
+}
+
+
+// test to string
+
+#[test]
+fn test_sexp_string_to_string() {
+    assert!(atom_s("val").as_str().unwrap() == "val");
+}
+
+#[test]
+fn test_sexp_keyword_to_string() {
+    assert!(atom_k("val").as_str().unwrap() == "val");
+}
+
+#[test]
+fn test_sexp_symbol_to_string() {
+    assert!(atom_y("val").as_str().unwrap() == "val");
+}
+
+#[test]
+fn test_sexp_integer_to_string() {
+    assert!(atom_i(1).as_str().is_err());
+}
+
+#[test]
+fn test_sexp_float_to_string() {
+    assert!(atom_f(1.0).as_str().is_err());
+}
+
+#[test]
+fn test_sexp_list_to_string() {
+    assert!(Sexp::List(vec![]).as_str().is_err());
 }
 
 /// The representation of an s-expression parse error.
